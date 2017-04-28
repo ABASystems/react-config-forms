@@ -1,6 +1,6 @@
 {
   "name": "react-config-forms",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Dynamic form creation based on a config, powered by React.",
   "main": "index.js",
   "scripts": {

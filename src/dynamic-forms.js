@@ -12,64 +12,85 @@ import Fields from './fields.js'
 class DynamicForm extends React.PureComponent {
   constructor(props) {
     super(props);
+
+    var context = {
+      now_date: Moment().format('DD/MM/YYYY'),
+      now_hm: Moment().format('hh:mm'),
+      ...this.props.context,
+    };
+    var parsedConfig = this.parseConfig(this.props.config || '');
+    var values = this.props.result;
+    if (!values) {
+      if (parsedConfig.config && Array.isArray(parsedConfig.fields)) {
+        parsedConfig.fields.map((field) => {
+          if (typeof values[field.key] === 'undefined') {
+            if (Array.isArray(field.initial)) {
+              values[field.key] = field.initial;
+            }
+            else if (typeof field['initial'] === 'string') {
+              values[field.key] = StringTemplate(field.initial, context);
+            }
+          }
+        });
+      }
+      else {
+        values = {};
+      }
+    }
+
     this.state = {
       ...this.state,
-      config: null,
       style: '',
-      parseError: null,
-      formatError: 'Config not loaded.',
-      values: this.props.result || {},
-      context: {
-        now_date: Moment().format('DD/MM/YYYY'),
-        now_hm: Moment().format('hh:mm'),
-        ...this.props.context,
-      },
+      values: values,
+      context: context,
+      ...parsedConfig,
     };
   }
 
   componentDidMount() {
-    var reactClass = this;
-    if (reactClass.props.configSelector) {
-      var inputElement = JQuery(reactClass.props.configSelector).first();
+    // todo: load initials when applicable (used to be done by setConfig, now is not)
+
+    if (this.props.configSelector) {
+      var inputElement = JQuery(this.props.configSelector).first();
       if (inputElement) {
         var initialConfig = null;
         if (inputElement.is('textarea') || inputElement.is('input')) {
           initialConfig = inputElement.val();
-          inputElement.on('input val change', function(event) {
+          inputElement.on('input val change', (event) => {
             var newValue = this.value;
-            reactClass.setConfig(newValue);
+            this.setConfig(newValue);
           });
         } else {
           initialConfig = inputElement.text();
         }
-        reactClass.setConfig(initialConfig);
+        this.setConfig(initialConfig);
       } else {
         console.error('Unable to find input element for selector:', this.props.configSelector);
       }
     }
-    if (reactClass.props.styleSelector) {
-      var styleElement = JQuery(reactClass.props.styleSelector).first();
+    if (this.props.styleSelector) {
+      var styleElement = JQuery(this.props.styleSelector).first();
       if (styleElement) {
         var initialStyle = '';
         if (styleElement.is('textarea') || styleElement.is('input')) {
           initialStyle = styleElement.val();
-          styleElement.on('input val change', function(event) {
+          styleElement.on('input val change', (event) => {
             var newValue = this.value;
-            reactClass.setStyle(newValue);
+            this.setStyle(newValue);
           });
         } else {
           initialStyle = styleElement.text();
         }
-        reactClass.setStyle(initialStyle);
+        this.setStyle(initialStyle);
       } else {
         console.error('Unable to find input element for selector:', this.props.styleSelector);
       }
     }
-    if (reactClass.props.config) {
-      this.setConfig(reactClass.props.config);
+    if (this.props.config) {
+      this.setConfig(this.props.config);
     }
-    if (reactClass.props.style) {
-      this.setStyle(reactClass.props.style);
+    if (this.props.style) {
+      this.setStyle(this.props.style);
     }
   }
   componentDidUpdate(nextProps, nextState) {
@@ -83,43 +104,32 @@ class DynamicForm extends React.PureComponent {
     }
   }
 
-  setConfig(config) {
-    var newConfig;
-    try {
-      newConfig = Yaml.safeLoad(config);
-      this.setState(state => {
-        state.parseError = null;
-        var cleanedConfig = Config(newConfig);
-        if (typeof cleanedConfig === 'string') {
-          state.config = null;
-          state.formatError = cleanedConfig;
-        } else {
-          state.config = cleanedConfig;
-          for (var fieldIndex = 0; fieldIndex < state.config.fields.length; fieldIndex++) {
-            var field = state.config.fields[fieldIndex];
-            if (typeof state.values[field.key] === 'undefined') {
-              if (Array.isArray(field.initial)) {
-                state.values[field.key] = field.initial;
-              }
-              else if (typeof field['initial'] === 'string') {
-                state.values[field.key] = StringTemplate(field.initial, this.state.context);
-              }
-            }
-          }
-          state.formatError = null;
-        }
+  parseConfig(config) {
+    var result = {
+      config: {},
+      parseError: null,
+      formatError: null,
+    };
 
-        return state;
-      });
+    try {
+      result.config = Yaml.safeLoad(config);
+      var cleanedConfig = Config(result.config);
+      if (typeof cleanedConfig === 'string') {
+        result.config = null;
+        result.formatError = cleanedConfig;
+      }
+      else {
+        result.config = cleanedConfig;
+      }
     }
     catch (e) {
-      this.setState(state => {
-        state.config = null;
-        state.parseError = e.message;
-        state.formatError = null;
-        return state;
-      });
+      result.parseError = e.message;
     }
+
+    return result;
+  }
+  setConfig(config) {
+    this.setState(this.parseConfig(config));
   }
   setStyle(styles) {
     var reactClass = this;
