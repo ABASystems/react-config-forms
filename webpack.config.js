@@ -2,7 +2,7 @@ var path = require('path');
 var NodeExternals = require('webpack-node-externals');
 
 module.exports = {
-  entry: './src/dynamic-forms.js',
+  entry: './src/config-forms.js',
   output: {
     path: __dirname + '/dist',
     filename: 'react-config-forms.js',
