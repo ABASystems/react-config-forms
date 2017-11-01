@@ -1,5 +1,3 @@
-import JQuery from 'jquery'
-
 const expect_bool = function(value, name, defaultValue) {
   switch (typeof value) {
     case 'undefined':
@@ -49,7 +47,7 @@ const expect_string__lower_trim = function(value, name, defaultValue) {
 
 
 const CleanLayout = function(layout) {
-  if (!JQuery.isArray(layout))
+  if (!Array.isArray(layout))
     throw 'Layout is not an array';
 
   var cleanLayout = [];

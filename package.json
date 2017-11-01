@@ -33,6 +33,7 @@
     "js-yaml": "^3.5.2",
     "moment": "^2.10.6",
     "react": "16.0.0-beta.5",
+    "react-native": "^0.49.5",
     "string-template": "^1.0.0"
   },
   "devDependencies": {
