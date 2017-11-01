@@ -84,8 +84,8 @@ class ConfigForm extends React.Component {
     this.setState((state) => {
       state.values = {
         ...state.values,
-        key: value,
       }
+      state.values[key] = value
       return state
     }, () => {
       if (this.props.onChange) {
@@ -102,21 +102,13 @@ class ConfigForm extends React.Component {
     }
 
     let fieldProps = {
+      ...field,
       key: key,
       fieldKey: field.key,
       value: this.state.values[field.key],
-      valueChange: this.handleValueChange,
+      onChange: this.handleValueChange,
     }
     return React.createElement(renderer, fieldProps)
-
-    return (
-      <this.props.renderer.text
-        key={key}
-        fieldKey={field.key}
-        value={this.state.values[field.key]}
-        valueChange={this.handleValueChange}
-      />
-    )
   }
   renderContents(contents, includes) {
     const { renderer } = this.props
